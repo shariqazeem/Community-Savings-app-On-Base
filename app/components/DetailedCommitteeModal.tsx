@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatUnits } from 'viem';
 import { Users, DollarSign, Clock, X, AlertCircle, Award, CheckCircle2, Share2, Lock } from 'lucide-react';
+import { Identity, Avatar, Name, Address, Badge } from '@coinbase/onchainkit/identity';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as `0x${string}`;
@@ -76,7 +77,6 @@ export default function DetailedCommitteeModal({ committeeId, userAddress, onClo
 
     if (!committee) return null;
 
-    // Extract all committee data
     const [creator, name, amount, maxMembers, currentMembers, roundDuration, , , currentRound, depositsThisRound, nextPayoutIndex, phase, , , inviteCode, isPrivate] = committee;
     const monthlyAmount = Number(formatUnits(amount, 6));
     const totalPool = monthlyAmount * Number(maxMembers);
@@ -87,11 +87,8 @@ export default function DetailedCommitteeModal({ committeeId, userAddress, onClo
     const canContribute = isMember && Number(phase) === 1 && memberInfo && !memberInfo[3];
     const canDistribute = isCreator && Number(phase) === 2;
     const hasAllowance = allowance && allowance >= amount;
-
-    // Shareable invite code format: "ID:CODE"
     const shareableInviteCode = `${committeeId}:${inviteCode}`;
 
-    // Then AFTER all the variable declarations, BEFORE the useEffect:
     const executeMainAction = useCallback(() => {
         if (canContribute) {
             writeContract({
@@ -110,7 +107,6 @@ export default function DetailedCommitteeModal({ committeeId, userAddress, onClo
         }
     }, [canContribute, canJoin, inviteCode, committeeId, writeContract]);
 
-    // Then your useEffect with proper dependency
     useEffect(() => {
         if (isSuccess && step === 'approve') {
             refetchAllowance();
@@ -258,8 +254,12 @@ export default function DetailedCommitteeModal({ committeeId, userAddress, onClo
                                 <p className="text-purple-400 font-bold mb-1 text-sm sm:text-base">Ready for Payout! 💰</p>
                                 <p className="text-slate-300 text-xs sm:text-sm mb-2">All contributions received</p>
                                 <div className="bg-black/30 rounded-lg p-3 mt-2">
-                                    <p className="text-slate-400 text-xs mb-1">Next Recipient</p>
-                                    <p className="text-white font-mono text-xs sm:text-sm break-all">{nextRecipient.slice(0, 10)}...{nextRecipient.slice(-8)}</p>
+                                    <p className="text-slate-400 text-xs mb-2">Next Recipient</p>
+                                    {/* ENHANCED: Show Basename instead of raw address */}
+                                    <Identity address={nextRecipient} className="!bg-transparent">
+                                        <Avatar className="!w-8 !h-8" />
+                                        <Name className="!text-white !font-semibold" />
+                                    </Identity>
                                     <p className="text-purple-400 font-bold text-base sm:text-lg mt-2">${totalPool.toFixed(2)}</p>
                                 </div>
                             </div>
@@ -377,6 +377,7 @@ export default function DetailedCommitteeModal({ committeeId, userAddress, onClo
                     </div>
                 </div>
 
+                {/* ENHANCED: Members list with Basenames */}
                 {showMembers && members && (
                     <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-5 mb-6">
                         <p className="text-white font-bold mb-4 flex items-center text-sm sm:text-base">
@@ -393,16 +394,20 @@ export default function DetailedCommitteeModal({ committeeId, userAddress, onClo
                                             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 rounded-full flex items-center justify-center border border-emerald-500/30 flex-shrink-0">
                                                 <span className="text-emerald-400 font-bold text-xs sm:text-sm">#{idx + 1}</span>
                                             </div>
-                                            <div className="min-w-0">
-                                                <span className="text-slate-300 font-mono text-xs sm:text-sm block truncate">
-                                                    {member.slice(0, 6)}...{member.slice(-4)}
-                                                </span>
-                                                {idx < Number(nextPayoutIndex) && (
-                                                    <span className="text-green-400 text-xs font-semibold">✓ Paid</span>
-                                                )}
-                                                {idx === Number(nextPayoutIndex) && Number(phase) === 2 && (
-                                                    <span className="text-purple-400 text-xs font-semibold">💰 Next</span>
-                                                )}
+                                            <div className="min-w-0 flex-1">
+                                                {/* ENHANCED: Show Basename with fallback to address */}
+                                                <Identity address={member} className="!bg-transparent">
+                                                    <Avatar className="!w-6 !h-6 !hidden sm:!inline-flex" />
+                                                    <Name className="!text-slate-300 !text-sm !font-medium" />
+                                                </Identity>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    {idx < Number(nextPayoutIndex) && (
+                                                        <span className="text-green-400 text-xs font-semibold">✓ Paid</span>
+                                                    )}
+                                                    {idx === Number(nextPayoutIndex) && Number(phase) === 2 && (
+                                                        <span className="text-purple-400 text-xs font-semibold">💰 Next</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                         {member.toLowerCase() === userAddress.toLowerCase() && (

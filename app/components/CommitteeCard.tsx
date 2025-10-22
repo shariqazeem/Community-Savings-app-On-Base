@@ -1,10 +1,10 @@
-
 // components/CommitteeCard.tsx
 'use client';
 
 import { useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
 import { Users, Calendar, ArrowRight, Lock } from 'lucide-react';
+import { Identity, Avatar, Name } from '@coinbase/onchainkit/identity';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 
@@ -66,6 +66,16 @@ export default function CommitteeCard({ id, onSelect, userAddress }: { id: numbe
             {isCreator && <span className="text-xs font-bold px-2 py-1 rounded-full border bg-purple-500/20 text-purple-400 border-purple-500/30 whitespace-nowrap">👑</span>}
             {isMember && !isCreator && <span className="text-xs font-bold px-2 py-1 rounded-full border bg-blue-500/20 text-blue-400 border-blue-500/30 whitespace-nowrap">✓</span>}
           </div>
+          
+          {/* ENHANCED: Show creator's Basename */}
+          <div className="mb-2">
+            <p className="text-slate-500 text-xs mb-1">Created by</p>
+            <Identity address={creator} className="!bg-transparent">
+              <Avatar className="!w-5 !h-5" />
+              <Name className="!text-emerald-400 !text-sm !font-medium" />
+            </Identity>
+          </div>
+
           <div className="flex items-center space-x-3 sm:space-x-4 text-xs sm:text-sm text-slate-400">
             <span className="flex items-center space-x-1">
               <Users className="w-3 h-3 sm:w-4 sm:h-4" />
