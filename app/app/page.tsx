@@ -5,6 +5,8 @@ import { ConnectWallet, Wallet, WalletDropdown, WalletDropdownDisconnect } from 
 import { Avatar, Name, Identity, Address, Badge } from '@coinbase/onchainkit/identity';
 import { useState, useEffect } from 'react';
 import { useReadContract } from 'wagmi';
+import { useChainId, useSwitchChain } from 'wagmi';
+import { baseSepolia } from 'wagmi/chains';
 import { Sparkles, Plus, Users } from 'lucide-react';
 import Link from 'next/link';
 import CommitteeList from '../components/CommitteeList';
@@ -139,6 +141,9 @@ export default function AppPage() {
     const [showJoin, setShowJoin] = useState(false);
     const [selectedCommittee, setSelectedCommittee] = useState<number | null>(null);
     const [refreshKey, setRefreshKey] = useState(0);
+    const chainId = useChainId();
+    const { switchChain } = useSwitchChain();
+    
 
     const { data: totalCommittees, refetch } = useReadContract({
         address: CONTRACT_ADDRESS,
@@ -171,6 +176,24 @@ export default function AppPage() {
                     <Link href="/" className="text-emerald-400 hover:text-emerald-300 text-sm mt-4 block">
                         ← Back to home
                     </Link>
+                </div>
+            </main>
+        );
+    }
+    if (chainId !== baseSepolia.id) {
+        return (
+            <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center p-4">
+                <div className="text-center max-w-md w-full bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+                    <h2 className="text-2xl font-bold text-white mb-4">⚠️ Wrong Network</h2>
+                    <p className="text-slate-400 mb-6">
+                        Please switch to Base Sepolia testnet to use this app.
+                    </p>
+                    <button
+                        onClick={() => switchChain({ chainId: baseSepolia.id })}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold transition-all"
+                    >
+                        Switch to Base Sepolia
+                    </button>
                 </div>
             </main>
         );
